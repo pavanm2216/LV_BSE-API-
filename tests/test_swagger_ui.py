@@ -13,7 +13,7 @@ Run:
 import pytest
 from playwright.sync_api import Page, expect
 
-BASE_URL = "http://209.38.125.116:8002"
+BASE_URL = "http://127.0.0.1:8000"
 SWAGGER_URL = f"{BASE_URL}/docs"
 
 
@@ -141,7 +141,7 @@ def test_login_endpoint_expand_and_try(page: Page):
     # Fill in the request body
     textarea = page.locator("textarea.body-param__text").first
     textarea.fill("")
-    textarea.type('{"username": "member/92374/lendrixventechprivatelimited", "password": "Member@123"}')
+    textarea.type('{"username": "test_member", "password": "test_password"}')
 
     # Click Execute
     page.get_by_role("button", name="Execute").first.click()

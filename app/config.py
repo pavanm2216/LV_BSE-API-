@@ -20,8 +20,6 @@ class Settings(BaseSettings):
     # --- BSE StAR MF connection -------------------------------------------------
     protocol: str = "https"
     base_url: str = "www.example-starmf-host.com"  # set STARMF_BASE_URL in .env
-    login_username: str = ""          # e.g. member/0000/abcd.admin
-    login_password: str = ""
 
     # --- Encryption headers (JOSE) ----------------------------------------------
     # Set STARMF_USE_ENCRYPTION=true to send/receive `Content-type: application/jose`

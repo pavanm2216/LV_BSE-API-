@@ -64,7 +64,7 @@ class StarMFClient:
             if self._settings.api_org_id:
                 headers["X-API-Org-ID"] = self._settings.api_org_id
         else:
-            headers["Content-Type"] = "application/json; charset=utf-8"
+            headers["Content-Type"] = "application/json"
 
         if authed:
             if not self._token:
@@ -78,7 +78,7 @@ class StarMFClient:
             if not (self._settings.member_private_key_path and self._settings.bse_public_key_path):
                 raise HTTPException(
                     status_code=500,
-                    detail="STARMF_USE_ENCRYPTION is true but signing/encryption keys are not configured.",
+                    detail="STARMF_USE_ENCRYPTION is true"" but signing/encryption keys are not configured.",
                 )
             return jose.sign_and_encrypt(
                 envelope,
