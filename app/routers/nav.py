@@ -9,4 +9,4 @@ router = APIRouter(prefix="/nav", tags=["NAV"])
 
 @router.post("/master-list")
 async def nav_master_list(payload: NAVMasterListRequest, client: StarMFClient = Depends(get_client)):
-    return await client.post("v2/nav_master_list", payload.model_dump(exclude_none=True))
+    return await client.post("nav_master_list", payload.model_dump(exclude_none=True))
