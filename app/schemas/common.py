@@ -7,17 +7,12 @@ from pydantic import BaseModel, ConfigDict
 
 
 class BaseModelPermissive(BaseModel):
-    """Base class that allows extra fields to pass through untouched.
-
-    BSE's STARMF payloads have many optional / conditional fields depending on
-    holding nature, resident status, physical vs demat, etc. Rather than
-    hard-coding every permutation, models here type the common fields and let
-    anything else through so callers aren't blocked by an incomplete schema.
-    """
+    """Base class that allows extra fields to pass through untouched."""
     model_config = ConfigDict(extra="allow")
 
 
-class Investor(BaseModelPermissive):
+class Investor(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     ucc: Optional[str] = None
     client_code: Optional[str] = None
 

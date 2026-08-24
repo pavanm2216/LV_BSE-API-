@@ -8,7 +8,7 @@ from sqlalchemy import (
     Boolean, Date, DateTime, ForeignKey, Integer,
     Numeric, String, Text, func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -48,6 +48,64 @@ class BseApiLog(Base):
     request_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     response_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class BseUcc(Base):
+    """Local record of a UCC onboarding submission and BSE's outcome."""
+
+    __tablename__ = "bse_uccs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # --- BSE identifiers ---
+    request_client_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    bse_client_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    member_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    bse_ucc_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    submission_status: Mapped[str] = mapped_column(String(20), nullable=False, default="SUBMITTING")
+
+    # --- UCC top-level fields ---
+    holding_nature: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    tax_status: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    tax_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    rdmp_idcw_pay_mode: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    is_client_physical: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    is_client_demat: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    is_nomination_opted: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    comm_mode: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    onboarding: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    is_multi_ucc: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    parent_client_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # --- Primary holder (holder_rank=1) ---
+    primary_pan: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    primary_first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    primary_last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    primary_dob: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    primary_gender: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    primary_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    primary_mobile: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    kyc_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    # --- Communication address ---
+    comm_address_line_1: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    comm_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    comm_state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    comm_postalcode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    comm_country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # --- Primary bank account ---
+    bank_ifsc: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    bank_acc_num: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    bank_acc_type: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    # --- Raw payloads (kept for full audit) ---
+    request_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    response_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    failure_detail: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 # ---------------------------------------------------------------------------

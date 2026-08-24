@@ -58,7 +58,10 @@ class StarMFClient:
     # -- core request plumbing ---------------------------------------------------
 
     def _headers(self, *, authed: bool) -> dict:
-        headers = {"Accept": "application/json"}
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "curl/8.5.0",  # BSE security gateway blocks httpx's default User-Agent
+        }
         if self._settings.use_encryption:
             headers["Content-type"] = "application/jose"
             if self._settings.api_org_id:
@@ -105,13 +108,22 @@ class StarMFClient:
         try:
             return response.json()
         except ValueError:
-            hint = _extract_html_hint(response.text)
+            # BSE occasionally returns two concatenated JSON objects — take the first
+            text = response.text.strip()
+            try:
+                import json as _json
+                decoder = _json.JSONDecoder()
+                obj, _ = decoder.raw_decode(text)
+                return obj
+            except (ValueError, KeyError):
+                pass
+            hint = _extract_html_hint(text)
             raise HTTPException(status_code=502, detail={
                 "error": "Non-JSON response from STARMF",
                 "bse_status_code": response.status_code,
                 "likely_cause": "IP not whitelisted / session expired / BSE maintenance",
                 "page_hint": hint,
-                "raw_snippet": response.text[:300],
+                "raw_snippet": text[:300],
             })
 
     async def _log(self, db: AsyncSession | None, *, endpoint: str, status_code: int,

@@ -49,40 +49,43 @@ def _load_key(path_or_pem: str) -> jwk.JWK:
 
 
 def sign_and_encrypt(payload: dict, *, sign_key_path: str, encrypt_key_path: str) -> str:
-    """Sign the JSON payload with our private key, then encrypt the resulting
-    JWS with the counterparty's (BSE's) public key. Returns a compact JWE
-    string suitable for the request body when Content-type: application/jose.
+    """Encrypt the JSON payload with BSE's public key, then sign the resulting
+    JWE with our private key. Returns a compact JWS string whose payload is
+    the JWE — matching BSE's official encrypt-then-sign reference implementation.
     """
     signing_key = _load_key(sign_key_path)
     encrypting_key = _load_key(encrypt_key_path)
 
-    signer = jws.JWS(json_encode(payload).encode())
-    signer.add_signature(
-        signing_key, alg=SIGNING_ALG, protected=json_encode({"alg": SIGNING_ALG})
-    )
-    signed = signer.serialize(compact=True)
-
+    # Step 1: encrypt payload → JWE
     encrypter = jwe.JWE(
-        signed.encode(),
+        json_encode(payload).encode(),
         protected=json_encode({"alg": KEY_WRAP_ALG, "enc": CONTENT_ENC_ALG}),
     )
     encrypter.add_recipient(encrypting_key)
-    return encrypter.serialize(compact=True)
+    encrypted = encrypter.serialize(compact=True)
+
+    # Step 2: sign JWE → JWS
+    signer = jws.JWS(encrypted.encode())
+    signer.add_signature(
+        signing_key, alg=SIGNING_ALG, protected=json_encode({"alg": SIGNING_ALG})
+    )
+    return signer.serialize(compact=True)
 
 
 def decrypt_and_verify(token: str, *, decrypt_key_path: str, verify_key_path: str) -> dict:
-    """Reverse of sign_and_encrypt: decrypt the JWE with our private key, then
-    verify the inner JWS with the counterparty's public key. Returns the
-    decoded JSON payload.
+    """Reverse of sign_and_encrypt: verify the outer JWS with BSE's public key,
+    then decrypt the inner JWE with our private key. Returns the decoded JSON payload.
     """
     decrypting_key = _load_key(decrypt_key_path)
     verifying_key = _load_key(verify_key_path)
 
-    decrypter = jwe.JWE()
-    decrypter.deserialize(token, key=decrypting_key)
-    signed_payload = decrypter.payload.decode()
-
+    # Step 1: verify outer JWS signature
     verifier = jws.JWS()
-    verifier.deserialize(signed_payload, key=verifying_key)
+    verifier.deserialize(token, key=verifying_key)
     verifier.verify(verifying_key)
-    return json_decode(verifier.payload)
+    encrypted = verifier.payload.decode()
+
+    # Step 2: decrypt inner JWE
+    decrypter = jwe.JWE()
+    decrypter.deserialize(encrypted, key=decrypting_key)
+    return json_decode(decrypter.payload)

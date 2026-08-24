@@ -76,6 +76,34 @@ def test_scheme_master_list(authed_client):
     _assert_envelope(route.calls[0].request, {"start": 0, "length": 10})
 
 
+@respx.mock
+def test_scheme_master_list_omits_empty_defaults(authed_client):
+    route = respx.post(f"{BSE_BASE}/master_scheme_list").mock(return_value=_ok())
+    resp = authed_client.post("/schemes/master-list", json={})
+    assert resp.status_code == 200
+    _assert_envelope(route.calls[0].request, {"start": 0, "length": 100})
+
+
+def test_scheme_master_list_rejects_swagger_field_placeholder(authed_client):
+    resp = authed_client.post("/schemes/master-list", json={"fields": ["string"]})
+    assert resp.status_code == 422
+
+
+@respx.mock
+def test_scheme_master_list_forwards_modified_date_filters(authed_client):
+    route = respx.post(f"{BSE_BASE}/master_scheme_list").mock(return_value=_ok())
+    payload = {
+        "fields": ["ALL"],
+        "start": 0,
+        "length": 20,
+        "filter_param": {"modified_at": "2026-06-20", "modified_till": "2026-06-24"},
+        "search": {"value": "PRTFGP-GR"},
+    }
+    resp = authed_client.post("/schemes/master-list", json=payload)
+    assert resp.status_code == 200
+    _assert_envelope(route.calls[0].request, payload)
+
+
 # ---------------------------------------------------------------------------
 # 2. KYC — POST /kyc/link  →  BSE v2/get_kyc_link
 # ---------------------------------------------------------------------------

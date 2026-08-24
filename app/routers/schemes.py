@@ -12,4 +12,8 @@ async def scheme_master_list(
     payload: SchemeMasterListRequest,
     client: StarMFClient = Depends(get_client),
 ):
-    return await client.post("master_scheme_list", payload.model_dump())
+    # Empty filters are omitted; BSE's documented pagination values are retained.
+    data = payload.model_dump(exclude_none=True, exclude_defaults=True)
+    data["start"] = payload.start
+    data["length"] = payload.length
+    return await client.post("master_scheme_list", data)
