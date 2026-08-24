@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.security import HTTPBearer
 
 from app.clients.starmf_client import StarMFClient
 from app.config import get_settings
@@ -44,7 +45,25 @@ app = FastAPI(
     ),
     version="0.1.0",
     lifespan=lifespan,
+    swagger_ui_parameters={"persistAuthorization": True},
+    openapi_tags=[
+        {"name": "Login"},
+        {"name": "UCC"},
+        {"name": "Orders"},
+        {"name": "SXP"},
+        {"name": "Schemes"},
+        {"name": "KYC"},
+        {"name": "Payment Detail"},
+        {"name": "NFT"},
+        {"name": "Mandate"},
+        {"name": "NAV"},
+        {"name": "2FA"},
+        {"name": "Payment Gateway"},
+        {"name": "Meta"},
+    ],
 )
+
+_bearer = HTTPBearer(auto_error=False)
 
 app.include_router(login.router)
 app.include_router(ucc.router)
@@ -63,6 +82,32 @@ app.include_router(payment_gateway.router)
 @app.get("/healthz", tags=["Meta"])
 async def healthz():
     return {"status": "ok"}
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Paste the access_token from POST /login response",
+        }
+    }
+    schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = custom_openapi
 
 
 @app.get("/healthz/starmf", tags=["Meta"])
