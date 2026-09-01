@@ -564,7 +564,7 @@ class OrderListRequest(_StrictModel):
 
 class OrderGetRequest(_StrictModel):
     model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
-        "id": 123456
+        "id": 5001436968,
     }})
     id: int
     filter_param: Optional[dict] = None
@@ -572,9 +572,9 @@ class OrderGetRequest(_StrictModel):
 
 class OrderCancelRequest(_StrictModel):
     model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
-        "id": 123456,
-        "investor": {"client_code": "PhysicalUCCTest1"},
-        "remark": "Cancelled by investor",
+        "id": 5001436968,
+        "investor": {"client_code": "DematUCCTest1"},
+        "remark": "reason for cancel",
     }})
     id: int
     investor: Investor
