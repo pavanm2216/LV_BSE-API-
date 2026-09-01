@@ -11,7 +11,6 @@ from app.schemas.common import (
     Investor,
     MemberDetails,
     Nomination,
-    Pagination,
 )
 
 
@@ -535,8 +534,32 @@ class OrderUpdateRequest(_StrictModel):
 # order_list / order_get / order_cancel
 # ---------------------------------------------------------------------------
 
-class OrderListRequest(Pagination):
-    pass
+class OrderListFilterParam(_StrictModel):
+    open_close: Optional[str] = None          # "o" open / "c" closed
+    order_src_type: Optional[List[str]] = None # ["lumpsum"] / ["sip"] etc.
+    status: Optional[List[str]] = None         # ["match_pending"] / ["payment_pending"] etc.
+    type: Optional[List[str]] = None           # ["p"] / ["r"] / ["s"]
+    ucc: Optional[List[str]] = None            # ["DematUCCTest1"]
+    member_code: Optional[str] = None
+    threshold_order: Optional[bool] = None
+    amc_code: Optional[str] = None
+    sxp_reg_no: Optional[str] = None
+    placed_at_after: Optional[str] = None      # "2024-01-06"
+    placed_at_before: Optional[str] = None     # "2025-11-06"
+
+
+class OrderListRequest(_StrictModel):
+    model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
+        "fields": ["ALL"],
+        "start": 0,
+        "length": 50,
+        "filter_param": {"open_close": "o"},
+    }})
+    fields: Optional[List[str]] = None
+    count_only: Optional[bool] = None
+    start: Optional[int] = 0
+    length: Optional[int] = 50
+    filter_param: Optional[OrderListFilterParam] = None
 
 
 class OrderGetRequest(_StrictModel):

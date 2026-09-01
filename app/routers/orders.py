@@ -120,7 +120,9 @@ async def order_list(
     payload: OrderListRequest,
     client: StarMFClient = Depends(get_client),
 ):
-    return await client.post("order_list", payload.model_dump(exclude_none=True, mode="json"))
+    data = payload.model_dump(exclude_none=True, mode="json")
+    data.setdefault("filter_param", {})
+    return await client.post("order_list", data)
 
 
 @router.post("/get", response_model=Dict[str, Any],
