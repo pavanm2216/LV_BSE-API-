@@ -255,6 +255,11 @@ class FatcaUpdate(BaseModel):
 
 class UpdateUCCStatusRequest(_StrictModel):
     """Individual UCC status update."""
+    model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
+        "member": {"member_id": "92374"},
+        "investor": {"client_code": "DematUCCTest1"},
+        "ucc_status": "ACTIVE",
+    }})
     member: Optional[MemberRef] = None
     investor: Investor
     parent_client_code: Optional[str] = None
@@ -352,6 +357,11 @@ class UpdateUCCIdentifierRequest(_StrictModel):
 
 class UpdateUCCHoldingNatureRequest(_StrictModel):
     """Holding nature change e.g. SI to JO."""
+    model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
+        "member": {"member_id": "92374"},
+        "investor": {"client_code": "DematUCCTest1"},
+        "holding_nature": "SI",
+    }})
     member: Optional[MemberRef] = None
     investor: Investor
     parent_client_code: Optional[str] = None
@@ -385,12 +395,21 @@ class UpdateUCCRequest(_StrictModel):
 
 
 class DeactivateUCCRequest(_StrictModel):
+    model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
+        "member": {"member_id": "92374"},
+        "investor": {"client_code": "DematUCCTest1"},
+        "ucc_status": "INACTIVE",
+    }})
     investor: Investor
     member: Optional[MemberRef] = None
     ucc_status: UccStatus = "INACTIVE"
 
 
 class GetUCCRequest(_StrictModel):
+    model_config = ConfigDict(extra="ignore", json_schema_extra={"example": {
+        "member": {"member_id": "92374"},
+        "investor": {"client_code": "DematUCCTest1"},
+    }})
     member: Optional[MemberRef] = None
     investor: Investor
 
